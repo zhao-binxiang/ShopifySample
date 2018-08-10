@@ -37,3 +37,20 @@ app.get('/shopify',(req,res)=>{
 		return res.status(400).send('Missing shop parameter. Please add ?shop=yourdevelopment-shop.myshopify.com to your request')
 	}
 })
+
+app.get('/shopify/callback',(req,res) =>{
+	const {shop,hmac,code,state} =req.query
+	const stateCookie = cookie.parse(req.headers.cookie).state;
+
+	if (state !== stateCookie) {
+		returen res.status(403).('request origin cannot be verified');
+	}
+
+	if (shop && hmac && code) {
+		res.status(200).send('Callback route');
+	} else {
+		res.status(400).send('Required parameters missing');
+	}
+
+
+})

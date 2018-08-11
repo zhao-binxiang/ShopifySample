@@ -47,7 +47,34 @@ app.get('/shopify/callback', (req, res) => {
   }
 
   if (shop && hmac && code) {
-    res.status(200).send('Callback route');
+
+    const map = Object.assign({}, req.query);
+    delete map['signature'];
+    delete map['hmac'];
+    const message = querystring.stringify(map);
+    const providedHmac = Buffer.from(hmac,'utf-8');
+    const generatedHash = Buffer.from(
+    	crypto
+    		.createHmac('sha256', apiSecret)
+    		.update(message)
+    		.digest('hex'),
+    		'utf-8'
+    	);
+	let hashEquals = false;
+	try {
+		hashEquals =
+	crypto.timingSafeEqual(generatedHash,
+	providedHmac)
+	} catch(e) {
+		hashEquals = false;
+	};
+
+	if (!hashEquals) {
+		return res.status(400).send('HMAC validation failed');
+	}
+
+	res.status(200).send('HMAC validated')
+
 
     // TODO
     // Validate request is from Shopify

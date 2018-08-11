@@ -73,8 +73,23 @@ app.get('/shopify/callback', (req, res) => {
 		return res.status(400).send('HMAC validation failed');
 	}
 
-	res.status(200).send('HMAC validated')
+	const accessTokenRequestUrl = 'https://' + shop + '/admin/oauth/access_token';
+	const accessTokenPayload = {
+		client_id: apiKey,
+		client_secret: apiSecret,
+		code
+	};
 
+	request.post(accessTokenRequestUrl, {json: accessTokenPayload})
+	.then((accessTokenResponse) => {
+		const accessToken =
+	accessTokenResponse.access_token;
+
+		res.status(200).send("got an accesstoken, let's do something with it");
+	})
+	.catch((error) => {
+		res.status(error.statusCode).send(error.error.error_description);
+	});
 
     // TODO
     // Validate request is from Shopify

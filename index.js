@@ -10,7 +10,7 @@ const request = require('request-promise');
 const apiKey = process.env.SHOPIFY_API_KEY;
 const apiSecret = process.env.SHOPIFY_API_SECRET;
 const scopes = 'read_products';
-const forwardingAdress = "https://fb364c20.ngrok.io";
+const forwardingAddress = "https://7b32d50a.ngrok.io";
 
 app.get('/',(req,res) => {
 	res.send('Hello world!');
@@ -20,37 +20,40 @@ app.listen(3000,()=> {
 	console.log('Example app listening on port 3000!')
 })
 
-app.get('/shopify',(req,res)=>{
-	const shop = req.qeury.shop;
-	if (shop) {
-		const state = nonce();
-		const redirectUri = forwardingAdress + '/shopify/callback';
-		const installUrl = 'https://' + shop + 
-		'/admin/oauth/authorize?client_id=' + apiKey +
-		'&scope=' + scopes +
-		'&state=' + state +
-		'&redirect_uri=' + redirectUri;
+app.get('/shopify', (req, res) => {
+  const shop = req.query.shop;
+  if (shop) {
+    const state = nonce();
+    const redirectUri = forwardingAddress + '/shopify/callback';
+    const installUrl = 'https://' + shop +
+      '/admin/oauth/authorize?client_id=' + apiKey +
+      '&scope=' + scopes +
+      '&state=' + state +
+      '&redirect_uri=' + redirectUri;
 
-		res.cookie('state',state);
-		res.redirect(installUrl);  
-	} else{
-		return res.status(400).send('Missing shop parameter. Please add ?shop=yourdevelopment-shop.myshopify.com to your request')
-	}
-})
+    res.cookie('state', state);
+    res.redirect(installUrl);
+  } else {
+    return res.status(400).send('Missing shop parameter. Please add ?shop=your-development-shop.myshopify.com to your request');
+  }
+});
 
-app.get('/shopify/callback',(req,res) =>{
-	const {shop,hmac,code,state} =req.query
-	const stateCookie = cookie.parse(req.headers.cookie).state;
+app.get('/shopify/callback', (req, res) => {
+  const { shop, hmac, code, state } = req.query;
+  const stateCookie = cookie.parse(req.headers.cookie).state;
 
-	if (state !== stateCookie) {
-		returen res.status(403).('request origin cannot be verified');
-	}
+  if (state !== stateCookie) {
+    return res.status(403).send('Request origin cannot be verified');
+  }
 
-	if (shop && hmac && code) {
-		res.status(200).send('Callback route');
-	} else {
-		res.status(400).send('Required parameters missing');
-	}
+  if (shop && hmac && code) {
+    res.status(200).send('Callback route');
 
-
-})
+    // TODO
+    // Validate request is from Shopify
+    // Exchange temporary code for a permanent access token
+      // Use access token to make API call to 'shop' endpoint
+  } else {
+    res.status(400).send('Required parameters missing');
+  }
+});
